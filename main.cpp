@@ -24,16 +24,24 @@ digital_potentiometer pot2(
 		1				//Chip select
 		);
 
-rotary_encoder r1(22,21);
-rotary_encoder r2(3,2);
+rotary_encoder rot1(22,21);
+rotary_encoder rot2(3,2);
 void t1_function(){
-	r1.update();
+	rot1.update();
 }
 void t2_function(){
-	r2.update();
+	rot2.update();
 }
 
 void check_pots();
+
+double ci = .01 * .001 * .001;
+double cd = 0;
+
+double r1 = 0;
+double r2 = 0;
+double kp = 0;
+double ki = 0;
 
 int main(){
 	std::thread t1 (t1_function);
@@ -41,39 +49,51 @@ int main(){
 
 	std::cout << "starting..." << std::endl;
 	
-	r1.set_position(pot1.resistance_to_code(10 * 1000));
-	r2.set_position(pot2.resistance_to_code(10 * 1000));
+	rot1.set_position(pot1.resistance_to_code(10 * 1000));
+	rot2.set_position(pot2.resistance_to_code(10 * 1000));
 	int prev_position[] = {0,0};
 	for(;;){
 		check_pots();
-		if(prev_position[0] != r1.get_position() || prev_position[1] != r2.get_position()){
-			pot1.transmit(r1.get_position());
-			pot2.transmit(r2.get_position());
-			std::cout << pot1.code_to_resistance(r1.get_position()) / 1000.0 << "k,\t";
-			std::cout << pot2.code_to_resistance(r2.get_position()) / 1000.0 << "k" << std::endl;
-			prev_position[0] = r1.get_position();
-			prev_position[1] = r2.get_position();
+		if(prev_position[0] != rot1.get_position() || prev_position[1] != rot2.get_position()){
+			pot1.transmit(rot1.get_position());
+			pot2.transmit(rot2.get_position());
+
+			r1 = pot1.code_to_resistance(rot1.get_position()); 
+			r2 = pot2.code_to_resistance(rot2.get_position()); 
+
+	//		std::cout << r1 / 1000.0 << "k,\t";
+	//		std::cout << r1 / 1000.0 << "k" << std::endl;
+
+			prev_position[0] = rot1.get_position();
+			prev_position[1] = rot2.get_position();
+
+			kp = r2 / r1 + cd / ci;
+			ki = 1.0 / r1 / ci;					
+
+			std::cout << "kp = " << kp << "\t";
+			std::cout << "ki = " << ki << std::endl;
       		}
+		
 	}
 
 	return 0;
 }
 
 void check_pots(){
-		if(r1.get_position() < 0 ){
-			r1.set_position(0);
+		if(rot1.get_position() < 0 ){
+			rot1.set_position(0);
 			std::cerr << "Pot R1 is too low" << std::endl;
 		}
-		if(r1.get_position() > 0xFF - 1 ){
-			r1.set_position(0xFF - 1);
+		if(rot1.get_position() > 0xFF - 1 ){
+			rot1.set_position(0xFF - 1);
 			std::cerr << "Pot R1 is too high" << std::endl;
 		}
-		if(r2.get_position() < 0 ){
-			r2.set_position(0);
+		if(rot2.get_position() < 0 ){
+			rot2.set_position(0);
 			std::cerr << "Pot R2 is too low" << std::endl;
 		}
-		if(r2.get_position() > 0xFF - 1 ){
-			r2.set_position(0xFF - 1);
+		if(rot2.get_position() > 0xFF - 1 ){
+			rot2.set_position(0xFF - 1);
 			std::cerr << "Pot R1 is too high" << std::endl;
 		}
 	}
