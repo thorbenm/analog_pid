@@ -70,6 +70,8 @@ int main(){
 			kp = r2 / r1 + cd / ci;
 			ki = 1.0 / r1 / ci;					
 
+			std::cout << "r1 = " << r1 / 1000.0 << "k\t";
+			std::cout << "r2 = " << r2 / 1000.0 << "k\t";
 			std::cout << "kp = " << kp << "\t";
 			std::cout << "ki = " << ki << std::endl;
       		}
